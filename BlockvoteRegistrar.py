@@ -3,9 +3,6 @@ import sys
 import requests
 import json
 import base64
-import Crypto
-from Crypto.PublicKey import RSA
-from Crypto import Random
 from subprocess import *
 
 def jarWrapper(*args):
@@ -108,6 +105,8 @@ else:
 	#create the user on auth0
 
 	payload = {"connection": "Username-Password-Authentication",
+	  "username":args.rname,
+	  "name":args.remail,
 	  "email": args.remail,
 	  "password": args.rpassword,
 	  "user_metadata": {
