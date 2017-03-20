@@ -63,32 +63,68 @@ print(r)
 id_token="Bearer "+r['id_token']
 access_token=r['access_token']
 
+#Create the api authorization header
+Auth0Header = {"Authorization":api_token}
+	
 #generate key
 javaargs = ['RSAGenerator.jar'] 
 result = jarWrapper(*javaargs)
-publicExponent = result[0]
-privateExponent = result[1]
-modulus = result[2]
+publicExponent = result[0].strip()
+privateExponent = result[1].strip()
+modulus = result[2].strip()
 
-#create the user on auth0
-Auth0Header = {"Authorization":api_token}
+#Check if user exists
+emailSearchString = "\""+args.remail+"\""
+payload = {"page": "0",
+  "fields": "email,user_id",
+  "q": emailSearchString
+  }
 
-payload = {"connection": "Username-Password-Authentication",
-  "email": args.remail,
-  "password": args.rpassword,
+searchRequest = requests.get('https://enel500blockvote.auth0.com/api/v2/users', headers = Auth0Header,  params = payload)
+r=searchRequest.json()
+print(searchRequest)
+print(r)
+userExists = True
+if len(r)<>1:
+	userExists= False
+
+
+if userExists:
+	userID=r[0]["user_id"]
+	payload = {
   "user_metadata": {
 	  "publicKeyExponent": publicExponent,
 	  "publicKeyModulus": modulus,
 	  "privateKeyModulus": modulus,
 	  "privateKeyExponent": privateExponent
-	},
-  "app_metadata": {}
+	}
   }
   
-createRequest = requests.post('https://enel500blockvote.auth0.com/api/v2/users', headers = Auth0Header,  json = payload)
-print(createRequest)
-r=createRequest.json()
-print(r)
+	updateRequest = requests.patch('https://enel500blockvote.auth0.com/api/v2/users/'+userID, headers = Auth0Header,  json = payload)
+	print(updateRequest)
+	r=updateRequest.json()
+	print(r)
+else:
+	#create the user on auth0
+
+	payload = {"connection": "Username-Password-Authentication",
+	  "email": args.remail,
+	  "password": args.rpassword,
+	  "user_metadata": {
+		  "publicKeyExponent": publicExponent,
+		  "publicKeyModulus": modulus,
+		  "privateKeyModulus": modulus,
+		  "privateKeyExponent": privateExponent
+		},
+	  "app_metadata": {}
+	  }
+	  
+	createRequest = requests.post('https://enel500blockvote.auth0.com/api/v2/users', headers = Auth0Header,  json = payload)
+
+
+	print(createRequest)
+	r=createRequest.json()
+	print(r)
 #Create the user on Blockvote 
 BlockvoteHeader = {"Authorization" : id_token,
 	"AccessToken" : access_token}
