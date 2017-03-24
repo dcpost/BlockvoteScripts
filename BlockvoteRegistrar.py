@@ -110,6 +110,7 @@ else:
 	  "email": args.remail,
 	  "password": args.rpassword,
 	  "user_metadata": {
+		  "name" : args.rname,
 		  "publicKeyExponent": publicExponent,
 		  "publicKeyModulus": modulus,
 		  "privateKeyModulus": modulus,
@@ -129,7 +130,7 @@ BlockvoteHeader = {"Authorization" : id_token,
 	"AccessToken" : access_token}
 	
 payload = {"region":args.region,
-	"name":args.rname,
+	"registrarName":args.rname,
 	"registrarKeyModulus": modulus,
 	"registrarKeyExponent":publicExponent,
 	"registrarDistrict":args.district}
