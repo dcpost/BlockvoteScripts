@@ -129,7 +129,7 @@ BlockvoteHeader = {"Authorization" : id_token,
 	"AccessToken" : access_token}
 	
 payload = {"region":args.region,
-	"registrarName":args.rname,
+	"name":args.rname,
 	"registrarKeyModulus": modulus,
 	"registrarKeyExponent":publicExponent,
 	"registrarDistrict":args.district}
