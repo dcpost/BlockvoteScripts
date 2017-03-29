@@ -25,10 +25,15 @@ parser.add_argument("password", help="The admin password")
 parser.add_argument("rname", help="The registrar name")
 parser.add_argument("remail", help="The registrar email")
 parser.add_argument("rpassword", help="The new password")
-parser.add_argument("region", help="the region")
 parser.add_argument("district", help="the registrar district")
 
 args = parser.parse_args()
+
+registrarInfoRequest = requests.get('https://blockvotenode2.mybluemix.net/getRegistrarInfo')
+
+if args.rname in registrarInfoRequest.text:
+	print("Registrar already in Blockvote Blockchain")
+	sys.exit()
 
 #Get API token
 payload = {"grant_type":"client_credentials",
@@ -38,9 +43,13 @@ payload = {"grant_type":"client_credentials",
 }
 
 apiTokenRequest = requests.post("https://enel500blockvote.auth0.com/oauth/token", data = payload)
-print(apiTokenRequest)
+if apiTokenRequest.ok:
+	print("Access Token Obtained")
+else:
+	print("Could not get Authentication token")
+	print(apiTokenRequest.text)
+	sys.exit()
 r=apiTokenRequest.json()
-print(r)
 api_token="Bearer "+r['access_token']
 
 #Get the login info
@@ -55,8 +64,13 @@ payload = {"client_id" : "f2pQL6jMgGQLDsNlHfhQgsmMVGzMcgmg",
 	
 loginRequest = requests.post('https://enel500blockvote.auth0.com/oauth/ro', data = payload)
 
+if apiTokenRequest.ok:
+	print("Logged in to Auth0")
+else:
+	print("Could not login to Auth0")
+	print(loginRequest.text)
+	sys.exit()
 r=loginRequest.json()
-print(r)
 id_token="Bearer "+r['id_token']
 access_token=r['access_token']
 
@@ -79,17 +93,17 @@ payload = {"page": "0",
 
 searchRequest = requests.get('https://enel500blockvote.auth0.com/api/v2/users', headers = Auth0Header,  params = payload)
 r=searchRequest.json()
-print(searchRequest)
-print(r)
 userExists = True
 if len(r)<>1:
 	userExists= False
 
 
 if userExists:
+	print("User found on Auth0. Updating Information.")
 	userID=r[0]["user_id"]
 	payload = {
   "user_metadata": {
+      "name":args.rname,
 	  "publicKeyExponent": publicExponent,
 	  "publicKeyModulus": modulus,
 	  "privateKeyModulus": modulus,
@@ -98,18 +112,21 @@ if userExists:
   }
   
 	updateRequest = requests.patch('https://enel500blockvote.auth0.com/api/v2/users/'+userID, headers = Auth0Header,  json = payload)
-	print(updateRequest)
-	r=updateRequest.json()
-	print(r)
+	if updateRequest.ok:
+		print("User updated on Auth0.")
+	else:
+		print("Could update user on Auth0")
+		sys.exit()
 else:
 	#create the user on auth0
-
+	print("User not found on Auth0. Creating new user.")
 	payload = {"connection": "Username-Password-Authentication",
 	  "username":args.rname,
 	  "name":args.remail,
 	  "email": args.remail,
 	  "password": args.rpassword,
 	  "user_metadata": {
+	      "name":args.rname,
 		  "publicKeyExponent": publicExponent,
 		  "publicKeyModulus": modulus,
 		  "privateKeyModulus": modulus,
@@ -119,22 +136,28 @@ else:
 	  }
 	  
 	createRequest = requests.post('https://enel500blockvote.auth0.com/api/v2/users', headers = Auth0Header,  json = payload)
-
-
-	print(createRequest)
-	r=createRequest.json()
-	print(r)
+	if createRequest.ok:
+		print("User Created on Auth0")
+	else:
+		print("Could not Create User")
+		sys.exit()
 #Create the user on Blockvote 
 BlockvoteHeader = {"Authorization" : id_token,
 	"AccessToken" : access_token}
 	
-payload = {"region":args.region,
-	"registrarName":args.rname,
+payload = {"registrarName":args.rname,
 	"registrarKeyModulus": modulus,
 	"registrarKeyExponent":publicExponent,
 	"registrarDistrict":args.district}
 	
-initRequest = requests.post('https://blockvotenode2.mybluemix.net/addRegistrar', headers = BlockvoteHeader, data = payload)
-print(initRequest)
-r=initRequest.json()
-print(r)
+addRegistrarRequest = requests.post('https://blockvotenode2.mybluemix.net/addRegistrar', headers = BlockvoteHeader, data = payload)
+print(addRegistrarRequest.json())
+if addRegistrarRequest.ok:
+	print("User registered with following information")
+	print("Registrar Name: "+args.rname)
+	print("District: "+args.district)
+	print("Modulus: "+modulus)
+	print("Public Exponent: "+publicExponent)
+	print("Private Exponent: "+privateExponent)
+else:
+	print("Could not add registrar")
