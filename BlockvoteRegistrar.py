@@ -26,10 +26,11 @@ parser.add_argument("rname", help="The registrar name")
 parser.add_argument("remail", help="The registrar email")
 parser.add_argument("rpassword", help="The new password")
 parser.add_argument("district", help="the registrar district")
+parser.add_argument("url", help="The voting server URL")
 
 args = parser.parse_args()
 
-registrarInfoRequest = requests.get('https://blockvotenode2.mybluemix.net/getRegistrarInfo')
+registrarInfoRequest = requests.get(args.url+'/getRegistrarInfo')
 
 if args.rname in registrarInfoRequest.text:
 	print("Registrar already in Blockvote Blockchain")
@@ -103,6 +104,7 @@ if userExists:
 	userID=r[0]["user_id"]
 	payload = {
   "user_metadata": {
+      "url":args.url,
       "name":args.rname,
 	  "publicKeyExponent": publicExponent,
 	  "publicKeyModulus": modulus,
@@ -126,6 +128,7 @@ else:
 	  "email": args.remail,
 	  "password": args.rpassword,
 	  "user_metadata": {
+		  "url":args.url,
 		  "name" : args.rname,
 		  "publicKeyExponent": publicExponent,
 		  "publicKeyModulus": modulus,
@@ -150,8 +153,8 @@ payload = {"registrarName":args.rname,
 	"registrarKeyExponent":publicExponent,
 	"registrarDistrict":args.district}
 	
-addRegistrarRequest = requests.post('https://blockvotenode2.mybluemix.net/addRegistrar', headers = BlockvoteHeader, data = payload)
-print(addRegistrarRequest.json())
+addRegistrarRequest = requests.post(args.url+'/addRegistrar', headers = BlockvoteHeader, data = payload)
+
 if addRegistrarRequest.ok:
 	print("User registered with following information")
 	print("Registrar Name: "+args.rname)
