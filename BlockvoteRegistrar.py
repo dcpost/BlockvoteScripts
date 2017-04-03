@@ -126,7 +126,7 @@ else:
 	  "email": args.remail,
 	  "password": args.rpassword,
 	  "user_metadata": {
-	      "name":args.rname,
+		  "name" : args.rname,
 		  "publicKeyExponent": publicExponent,
 		  "publicKeyModulus": modulus,
 		  "privateKeyModulus": modulus,

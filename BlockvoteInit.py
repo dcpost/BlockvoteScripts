@@ -19,14 +19,15 @@ payload = {"client_id" : "f2pQL6jMgGQLDsNlHfhQgsmMVGzMcgmg",
 	
 loginRequest = requests.get('https://enel500blockvote.auth0.com/oauth/ro', data = payload)
 
-r=loginRequest.json()
-id_token="Bearer "+r['id_token']
-access_token=r['access_token']
+if loginRequest.ok:
+	r=loginRequest.json()
+	id_token="Bearer "+r['id_token']
+	access_token=r['access_token']
 
-header = {"Authorization" : id_token,
-	"AccessToken" : access_token}
-	
-initRequest = requests.get('https://blockvotenode2.mybluemix.net/init', headers = header)
-print(initRequest)
-r=initRequest.json()
-print(r)
+	header = {"Authorization" : id_token,
+		"AccessToken" : access_token}
+		
+	initRequest = requests.get('https://blockvotenode2.mybluemix.net/init', headers = header)
+	print(initRequest.text)
+else:
+	print("Could not login to Auth0")
